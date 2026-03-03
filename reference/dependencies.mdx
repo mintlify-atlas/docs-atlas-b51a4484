@@ -1,0 +1,83 @@
+---
+title: Dependencies
+description: Technology stack and dependencies used in the Video Compressor application
+---
+
+The Video Compressor application is built with Electron and relies on FFmpeg for video processing. This page covers all dependencies and their purposes.
+
+## Core dependencies
+
+### fluent-ffmpeg
+
+**Version:** ^2.1.2
+
+Fluent-ffmpeg is a Node.js wrapper for FFmpeg that provides a fluent API for video and audio processing. In this application, it handles all video compression operations.
+
+<Accordion title="Usage in the application">
+The application uses fluent-ffmpeg to:
+- Process video files with compression settings
+- Monitor compression progress in real-time
+- Handle video encoding with bitrate control (`-b:v 1000k`)
+- Manage temporary file cleanup after processing
+
+You can see the implementation in `renderer.js:32-51` where ffmpeg is configured with output options and event handlers.
+</Accordion>
+
+### ffmpeg-static
+
+**Version:** ^5.0.0
+
+Provides a static FFmpeg binary for Node.js applications. This eliminates the need for users to install FFmpeg separately on their system.
+
+<Note>
+The FFmpeg path is automatically configured in `renderer.js:7` using `ffmpeg.setFfmpegPath(ffmpegPath)`. This ensures the application works out of the box without manual FFmpeg installation.
+</Note>
+
+## Development dependencies
+
+### Electron
+
+**Version:** ^25.0.0
+
+Electron is the framework that enables building cross-platform desktop applications using web technologies (HTML, CSS, and JavaScript).
+
+<Info>
+Electron v25.0.0 is specified as a development dependency because it's bundled with the application during the build process.
+</Info>
+
+## Node.js built-in modules
+
+The application also uses several Node.js core modules:
+
+- **fs**: File system operations for reading/writing video files
+- **path**: Path manipulation for cross-platform file paths
+- **os**: Operating system utilities, specifically for temporary directory access
+
+## Version compatibility
+
+<Warning>
+Ensure you're using a compatible Node.js version with Electron 25.0.0. Electron 25 requires Node.js 18.x or higher.
+</Warning>
+
+### Recommended versions
+
+- **Node.js**: 18.x or higher
+- **npm**: 8.x or higher
+
+<Tip>
+To check your installed versions, run:
+```bash
+node --version
+npm --version
+```
+</Tip>
+
+## Installation
+
+Install all dependencies with:
+
+```bash
+npm install
+```
+
+This will install both production dependencies (ffmpeg-static and fluent-ffmpeg) and development dependencies (Electron).

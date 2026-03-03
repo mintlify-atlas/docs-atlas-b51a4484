@@ -1,0 +1,310 @@
+---
+title: Configuration and customization
+description: Customize the Video Compressor's settings, output options, and appearance
+---
+
+## FFmpeg output options
+
+You can customize video compression settings by modifying the FFmpeg output options in `renderer.js`.
+
+### Video bitrate configuration
+
+The default bitrate is set to 1000k (1 Mbps):
+
+```javascript renderer.js:33
+.outputOptions('-b:v 1000k')
+```
+
+<Steps>
+  <Step title="Modify the bitrate">
+    Change the value to adjust compression quality. Lower values produce smaller files with reduced quality, while higher values maintain better quality at larger file sizes.
+  </Step>
+  
+  <Step title="Common bitrate settings">
+    - **High quality**: `2000k` or higher
+    - **Balanced**: `1000k` (default)
+    - **Low quality/small size**: `500k` or lower
+  </Step>
+</Steps>
+
+### Additional output options
+
+You can add more FFmpeg options to the output configuration:
+
+```javascript
+ffmpeg(tempPath)
+  .outputOptions([
+    '-b:v 1000k',        // Video bitrate
+    '-c:v libx264',      // Video codec
+    '-preset medium',    // Encoding preset
+    '-crf 23'           // Constant rate factor
+  ])
+```
+
+<Accordion title="Video codec options">
+  Set the video codec using `-c:v`:
+  - `libx264`: H.264 codec (widely compatible)
+  - `libx265`: H.265/HEVC codec (better compression)
+  - `libvpx-vp9`: VP9 codec (for WebM)
+</Accordion>
+
+<Accordion title="Encoding presets">
+  Control encoding speed vs. file size with `-preset`:
+  - `ultrafast`, `superfast`, `veryfast`: Faster encoding, larger files
+  - `medium`: Balanced (default if not specified)
+  - `slow`, `slower`, `veryslow`: Slower encoding, smaller files
+</Accordion>
+
+<Accordion title="Constant rate factor (CRF)">
+  The `-crf` option controls quality (0-51 scale):
+  - `0`: Lossless
+  - `17-23`: High quality (default is 23)
+  - `24-28`: Medium quality
+  - `51`: Worst quality
+</Accordion>
+
+<Tip>
+  When using CRF, you don't need to specify bitrate (`-b:v`). CRF automatically adjusts bitrate to maintain consistent quality.
+</Tip>
+
+## Window configuration
+
+Customize the application window in `main.js`.
+
+### Window dimensions
+
+The default window size is 800x600 pixels:
+
+```javascript main.js:5-7
+const win = new BrowserWindow({
+  width: 800,
+  height: 600,
+```
+
+<Steps>
+  <Step title="Change dimensions">
+    Modify the `width` and `height` values to resize the application window.
+  </Step>
+  
+  <Step title="Add window constraints">
+    You can set minimum and maximum window sizes:
+    ```javascript
+    const win = new BrowserWindow({
+      width: 800,
+      height: 600,
+      minWidth: 600,
+      minHeight: 400,
+      maxWidth: 1200,
+      maxHeight: 900
+    });
+    ```
+  </Step>
+</Steps>
+
+### Security preferences
+
+The web preferences control security and Node.js integration:
+
+```javascript main.js:8-12
+webPreferences: {
+  preload: path.join(__dirname, 'preload.js'),
+  nodeIntegration: true, // Enable Node integration
+  contextIsolation: false // Disable context isolation for Node integration
+}
+```
+
+<Note>
+  The current configuration prioritizes functionality over security by enabling `nodeIntegration` and disabling `contextIsolation`. For production applications, you should use IPC communication instead.
+</Note>
+
+### Additional window options
+
+You can add more window customization options:
+
+```javascript
+const win = new BrowserWindow({
+  width: 800,
+  height: 600,
+  resizable: true,           // Allow window resizing
+  frame: true,               // Show window frame
+  transparent: false,        // Window transparency
+  backgroundColor: '#36393f', // Background color
+  title: 'Video Compressor', // Window title
+  webPreferences: {
+    preload: path.join(__dirname, 'preload.js'),
+    nodeIntegration: true,
+    contextIsolation: false
+  }
+});
+```
+
+## Output directory settings
+
+Compressed videos are saved to the `videooutputs` directory.
+
+### Default output location
+
+The output path is configured in `renderer.js:51`:
+
+```javascript renderer.js:51
+.save(path.join('videooutputs', 'compressed_' + file.name));
+```
+
+<Steps>
+  <Step title="Change output directory">
+    Modify the path to save videos to a different location:
+    ```javascript
+    .save(path.join('my-custom-folder', 'compressed_' + file.name));
+    ```
+  </Step>
+  
+  <Step title="Use absolute paths">
+    You can use absolute paths for system-wide directories:
+    ```javascript
+    const outputPath = path.join(os.homedir(), 'Videos', 'compressed_' + file.name);
+    .save(outputPath);
+    ```
+  </Step>
+  
+  <Step title="Customize filename pattern">
+    Change the filename prefix or add timestamps:
+    ```javascript
+    const timestamp = Date.now();
+    .save(path.join('videooutputs', `${timestamp}_${file.name}`));
+    ```
+  </Step>
+</Steps>
+
+<Info>
+  Make sure the output directory exists before saving files, or create it programmatically using `fs.mkdirSync(outputDir, { recursive: true })`.
+</Info>
+
+### Viewing compressed videos
+
+The application loads videos from the output directory in `renderer.js:57-80`:
+
+```javascript renderer.js:59
+const videoOutputsPath = path.join(__dirname, 'videooutputs');
+```
+
+If you change the output directory, update this path to match:
+
+```javascript
+const videoOutputsPath = path.join(__dirname, 'my-custom-folder');
+```
+
+## Styling customization
+
+Customize the application's appearance by modifying `styles.css`.
+
+### Color scheme
+
+The default color scheme uses a dark theme:
+
+```css styles.css:1-16
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #36393f;
+    color: #dcddde;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+h1 {
+    color: #7289da;
+}
+```
+
+<Steps>
+  <Step title="Change background color">
+    Modify `background-color` in the `body` selector to change the main background.
+  </Step>
+  
+  <Step title="Update text color">
+    Change the `color` property to adjust text visibility.
+  </Step>
+  
+  <Step title="Customize accent color">
+    The accent color (`#7289da`) is used for headings and buttons. Update it throughout the CSS file.
+  </Step>
+</Steps>
+
+### Button styling
+
+Buttons use the accent color with hover effects:
+
+```css styles.css:22-34
+button {
+    background-color: #7289da;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #5b6eae;
+}
+```
+
+<Tip>
+  The hover effect uses a darker shade of the accent color. Adjust both colors to match your desired theme.
+</Tip>
+
+### Progress bar styling
+
+The progress bar provides visual feedback during compression:
+
+```css styles.css:36-49
+.progress-container {
+    width: 100%;
+    background-color: #2f3136;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.progress-bar {
+    height: 20px;
+    background-color: #7289da;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+```
+
+<Accordion title="Customize progress bar height">
+  Change the `height` property in `.progress-bar` to make the progress bar taller or shorter.
+</Accordion>
+
+<Accordion title="Change progress bar color">
+  Modify `background-color` in `.progress-bar` to use a different color during compression.
+</Accordion>
+
+<Accordion title="Adjust animation speed">
+  The `transition: width 0.3s ease` property controls how smoothly the progress bar updates. Increase or decrease the duration (e.g., `0.5s`, `0.1s`) to change the animation speed.
+</Accordion>
+
+### Typography
+
+The application uses system fonts for a native appearance:
+
+```css styles.css:2
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+```
+
+You can customize the font stack:
+
+```css
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+```
+
+<Info>
+  System font stacks ensure the application uses native fonts on each platform for better performance and consistency.
+</Info>

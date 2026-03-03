@@ -1,0 +1,75 @@
+---
+title: Video Compressor
+description: A desktop application for easy video compression using FFmpeg
+---
+
+<Note>
+This is an ongoing project. Some features like the progress bar are currently work in progress.
+</Note>
+
+## Compress videos effortlessly on your desktop
+
+Video Compressor is an Electron-based desktop application that makes video compression simple and accessible. Built with Node.js and FFmpeg, it provides a clean interface for reducing video file sizes while maintaining quality.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Easy file selection" icon="file-video">
+    Select any video file from your system using the built-in file picker
+  </Card>
+  
+  <Card title="FFmpeg-powered compression" icon="gear">
+    Leverage the industry-standard FFmpeg library with optimized encoding settings
+  </Card>
+  
+  <Card title="Real-time progress tracking" icon="chart-line">
+    Monitor compression progress with a visual progress bar (work in progress)
+  </Card>
+  
+  <Card title="Organized output" icon="folder">
+    Compressed videos are automatically saved to a dedicated output directory
+  </Card>
+</CardGroup>
+
+## Technology stack
+
+Video Compressor is built with modern JavaScript technologies:
+
+- **Electron** - Cross-platform desktop application framework
+- **Node.js** - JavaScript runtime for file system operations
+- **Fluent-ffmpeg** - Node.js wrapper for FFmpeg video processing
+- **ffmpeg-static** - Bundled FFmpeg binaries for easy deployment
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Set up the project and install dependencies
+  </Card>
+  
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Compress your first video in minutes
+  </Card>
+  
+  <Card title="Video compression" icon="compress" href="/features/video-compression">
+    Learn about compression settings and output formats
+  </Card>
+  
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Understand the application structure and components
+  </Card>
+</CardGroup>
+
+## How it works
+
+The application uses a simple workflow:
+
+1. You select a video file through the Electron interface
+2. The file is temporarily copied to your system's temp directory
+3. FFmpeg processes the video with optimized compression settings (1000k bitrate)
+4. The compressed video is saved to the `videooutputs` directory with a `compressed_` prefix
+5. You can view all compressed videos directly in the application
+
+## Open source
+
+Video Compressor is open source and welcomes contributions. Fork the repository and submit pull requests for enhancements or bug fixes.

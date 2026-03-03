@@ -1,80 +1,146 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Compress your first video with Video Compressor
 ---
 
-## Get started in three steps
+<Note>
+Make sure you've completed the [installation steps](/installation) before proceeding.
+</Note>
 
-Get your documentation site running locally and make your first customization.
+## Compress your first video
 
-### Step 1: Set up your local environment
+Follow these steps to compress a video file using Video Compressor.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Start the application">
+    Launch Video Compressor from your terminal:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```bash
+    npm start
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    An Electron window will open with the Video Compressor interface.
+  </Step>
+  
+  <Step title="Select a video file">
+    Click the file input button to open your system's file picker. Select any video file you want to compress.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
+    <Info>
+    The application accepts all common video formats supported by FFmpeg (MP4, AVI, MOV, MKV, etc.).
+    </Info>
+  </Step>
+  
+  <Step title="Compress the video">
+    Click the **Compress Video** button to start the compression process.
+    
+    The application will:
+    - Copy your video to a temporary location
+    - Process it with FFmpeg using optimized settings (1000k bitrate)
+    - Display real-time progress updates
+    - Save the compressed version to the `videooutputs` directory
+    
+    ```javascript
+    // From renderer.js - compression configuration
+    ffmpeg(tempPath)
+      .outputOptions('-b:v 1000k')
+      .on('progress', (progress) => {
+        const percent = Math.round(progress.percent);
+        progressBar.style.width = percent + '%';
+      })
+      .on('end', () => {
+        output.innerText = 'Compression complete!';
+      })
+      .save(path.join('videooutputs', 'compressed_' + file.name));
+    ```
+  </Step>
+  
+  <Step title="Find your compressed video">
+    Once compression completes, your video will be saved in the `videooutputs` directory with a `compressed_` prefix.
+    
+    For example, if your original file was `vacation.mp4`, the compressed file will be `compressed_vacation.mp4`.
+    
+    <Tip>
+    Click the **View Compressed Videos** link in the application to see all your compressed videos and play them directly in the app.
+    </Tip>
+  </Step>
+</Steps>
+
+## Monitor compression progress
+
+The application includes a progress bar that updates in real-time during compression:
+
+- The progress bar displays the percentage completed
+- FFmpeg reports progress events throughout the compression process
+- When complete, you'll see a "Compression complete!" message
+
+```javascript
+// From renderer.js:34-37 - progress tracking
+.on('progress', (progress) => {
+  const percent = Math.round(progress.percent);
+  progressBar.style.width = percent + '%';
+  console.log('Compression progress:', percent + '%');
+})
+```
+
+## View compressed videos
+
+After compressing videos, you can view them directly in the application:
+
+1. Click the **View Compressed Videos** link
+2. The app reads all MP4 files from the `videooutputs` directory
+3. Videos are displayed with built-in playback controls
+
+```javascript
+// From renderer.js:57-80 - viewing functionality
+document.getElementById('view-videos-tab').addEventListener('click', async () => {
+  const videoOutputsPath = path.join(__dirname, 'videooutputs');
+  const files = await fs.promises.readdir(videoOutputsPath);
+  
+  files.forEach(file => {
+    if (file.endsWith('.mp4')) {
+      const videoElement = document.createElement('video');
+      videoElement.src = path.join(videoOutputsPath, file);
+      videoElement.controls = true;
+      videoContainer.appendChild(videoElement);
+    }
+  });
+});
+```
+
+## Troubleshooting
+
+<Accordion title="No video selected error">
+  If you see "Please select a video file", make sure you've clicked the file input and selected a valid video file before clicking the Compress button.
 </Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<Accordion title="Compression fails immediately">
+  Check that the `videooutputs` directory exists in your project root. Create it if missing:
+  
+  ```bash
+  mkdir videooutputs
+  ```
+</Accordion>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
+<Accordion title="Progress bar not updating">
+  The progress bar feature is currently work in progress. The compression will still complete successfully, but progress updates may not display correctly.
 </Accordion>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Video compression" icon="compress" href="/features/video-compression">
+    Learn about compression settings and customization
+  </Card>
+  
+  <Card title="Progress tracking" icon="chart-line" href="/features/progress-tracking">
+    Understand how progress monitoring works
+  </Card>
+  
+  <Card title="Configuration" icon="gear" href="/development/configuration">
+    Customize compression settings and output options
+  </Card>
+  
+  <Card title="Troubleshooting" icon="wrench" href="/reference/troubleshooting">
+    Common issues and solutions
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

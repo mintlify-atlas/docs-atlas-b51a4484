@@ -1,0 +1,120 @@
+---
+title: Installation
+description: Install and set up Video Compressor on your machine
+---
+
+## Prerequisites
+
+Before installing Video Compressor, ensure you have the following installed on your system:
+
+- **Node.js** (version 14 or higher recommended)
+- **npm** (comes with Node.js)
+- **Git** (for cloning the repository)
+
+<Info>
+FFmpeg binaries are included via the `ffmpeg-static` package, so you don't need to install FFmpeg separately.
+</Info>
+
+## Installation steps
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Video Compressor repository to your local machine:
+    
+    ```bash
+    git clone https://github.com/hhussain04/videocompressor.git
+    ```
+  </Step>
+  
+  <Step title="Navigate to the project directory">
+    Change into the project directory:
+    
+    ```bash
+    cd videocompressor
+    ```
+    
+    <Note>
+    The actual directory name is `videocompressor` (one word, lowercase).
+    </Note>
+  </Step>
+  
+  <Step title="Install dependencies">
+    Install all required npm packages:
+    
+    ```bash
+    npm install
+    ```
+    
+    This will install:
+    - `electron` (v25.0.0) - The desktop application framework
+    - `fluent-ffmpeg` (v2.1.2) - FFmpeg wrapper for Node.js
+    - `ffmpeg-static` (v5.0.0) - Bundled FFmpeg binaries
+  </Step>
+  
+  <Step title="Create the output directory">
+    Create the `videooutputs` directory where compressed videos will be saved:
+    
+    ```bash
+    mkdir videooutputs
+    ```
+    
+    <Warning>
+    This step is required! The application will fail to save compressed videos if this directory doesn't exist.
+    </Warning>
+  </Step>
+</Steps>
+
+## Verify installation
+
+To verify that everything is installed correctly, start the application:
+
+```bash
+npm start
+```
+
+You should see an Electron window open with the Video Compressor interface.
+
+## Project structure
+
+After installation, your project directory will look like this:
+
+```
+videocompressor/
+├── index.html          # Main HTML interface
+├── main.js             # Electron main process
+├── renderer.js         # Video compression logic
+├── styles.css          # Application styling
+├── package.json        # Project dependencies
+├── videooutputs/       # Output directory (you created this)
+└── node_modules/       # Installed dependencies
+```
+
+## Troubleshooting
+
+### Node.js version issues
+
+If you encounter errors during installation, ensure you're using Node.js version 14 or higher:
+
+```bash
+node --version
+```
+
+### Permission errors
+
+On Linux or macOS, you may need to use `sudo` when running npm commands, or configure npm to install packages globally without sudo.
+
+### Missing videooutputs directory
+
+If you see errors when compressing videos, make sure you created the `videooutputs` directory in the project root:
+
+```bash
+ls -la | grep videooutputs
+```
+
+If it doesn't exist, create it as shown in Step 4 above.
+
+## Next steps
+
+<Card title="Quickstart guide" icon="bolt" href="/quickstart">
+  Learn how to compress your first video
+</Card>

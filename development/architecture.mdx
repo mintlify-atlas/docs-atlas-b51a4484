@@ -1,0 +1,214 @@
+---
+title: Application architecture
+description: Understanding the Video Compressor's architecture and design patterns
+---
+
+## Overview
+
+The Video Compressor is built on Electron, utilizing a multi-process architecture that separates concerns between the main process, renderer process, and preload script. The application integrates FFmpeg for video compression and follows standard Electron security patterns.
+
+## Electron process model
+
+<Steps>
+  <Step title="Main process">
+    The main process (`main.js:1-29`) manages the application lifecycle and creates browser windows. It runs in a Node.js environment with full system access.
+  </Step>
+  
+  <Step title="Renderer process">
+    The renderer process (`renderer.js:1-81`) handles the user interface and video compression logic. It has direct Node.js integration enabled.
+  </Step>
+  
+  <Step title="Preload script">
+    The preload script (`preload.js:1-11`) runs before the renderer process and displays version information for Chrome, Node.js, and Electron.
+  </Step>
+</Steps>
+
+## Main process architecture
+
+The main process in `main.js` is responsible for creating and managing application windows.
+
+### Window creation
+
+The `createWindow` function configures the browser window with specific security settings:
+
+```javascript main.js:5-13
+const win = new BrowserWindow({
+  width: 800,
+  height: 600,
+  webPreferences: {
+    preload: path.join(__dirname, 'preload.js'),
+    nodeIntegration: true, // Enable Node integration
+    contextIsolation: false // Disable context isolation for Node integration
+  }
+});
+```
+
+<Note>
+  Node integration is enabled and context isolation is disabled to allow direct access to Node.js APIs from the renderer process. In production applications, you should use IPC communication instead for better security.
+</Note>
+
+### Application lifecycle
+
+The main process manages platform-specific behaviors:
+
+```javascript main.js:18-28
+app.whenReady().then(() => {
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+```
+
+<Info>
+  On macOS, the application stays active when all windows are closed, following platform conventions. On other platforms, the app quits automatically.
+</Info>
+
+## Renderer process architecture
+
+The renderer process handles all user interactions and video compression operations.
+
+### FFmpeg integration
+
+FFmpeg is initialized at the module level:
+
+```javascript renderer.js:1-7
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('ffmpeg-static');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+```
+
+<Tip>
+  The `ffmpeg-static` package provides a bundled FFmpeg binary, eliminating the need for users to install FFmpeg separately.
+</Tip>
+
+### Video compression flow
+
+The compression process follows this sequence:
+
+<Steps>
+  <Step title="File selection">
+    The user selects a video file using the file input (`renderer.js:9-20`). The application validates that a file is selected before proceeding.
+  </Step>
+  
+  <Step title="Temporary file creation">
+    The selected file is read as an ArrayBuffer and written to the system's temporary directory (`renderer.js:25-30`).
+  </Step>
+  
+  <Step title="FFmpeg processing">
+    FFmpeg compresses the video with configured output options and emits progress events (`renderer.js:32-51`).
+  </Step>
+  
+  <Step title="Output and cleanup">
+    The compressed video is saved to the `videooutputs` directory, and temporary files are cleaned up.
+  </Step>
+</Steps>
+
+### Progress tracking
+
+The application provides real-time feedback during compression:
+
+```javascript renderer.js:34-38
+.on('progress', (progress) => {
+  const percent = Math.round(progress.percent);
+  progressBar.style.width = percent + '%';
+  console.log('Compression progress:', percent + '%');
+})
+```
+
+### Error handling
+
+Error handling ensures temporary files are cleaned up even when compression fails:
+
+```javascript renderer.js:45-50
+.on('error', (err) => {
+  output.innerText = `Error: ${err.message}`;
+  progressBar.style.width = '0%';
+  console.error('Compression error:', err);
+  fs.unlinkSync(tempPath); // Clean up temporary file
+})
+```
+
+## Preload script
+
+The preload script displays version information for debugging purposes:
+
+```javascript preload.js:1-10
+window.addEventListener('DOMContentLoaded', () => {
+  const replaceText = (selector, text) => {
+    const element = document.getElementById(selector);
+    if (element) element.innerText = text;
+  };
+
+  for (const dependency of ['chrome', 'node', 'electron']) {
+    replaceText(`${dependency}-version`, process.versions[dependency]);
+  }
+});
+```
+
+## IPC communication pattern
+
+<Note>
+  The current implementation uses direct Node.js integration rather than IPC. While this simplifies development, you should consider implementing proper IPC communication for production applications to improve security.
+</Note>
+
+With the current architecture:
+- The renderer process has full Node.js access (`nodeIntegration: true`)
+- Context isolation is disabled (`contextIsolation: false`)
+- The renderer can directly use `require()` for Node.js modules
+
+## File structure overview
+
+```
+video-compressor/
+├── main.js           # Main process entry point
+├── renderer.js       # Renderer process logic
+├── preload.js        # Preload script
+├── index.html        # Application UI
+├── styles.css        # Application styles
+├── package.json      # Dependencies and metadata
+└── videooutputs/     # Compressed video output directory
+```
+
+### Core files
+
+<Accordion title="main.js">
+  Entry point for the Electron main process. Manages window creation, application lifecycle events, and platform-specific behaviors.
+</Accordion>
+
+<Accordion title="renderer.js">
+  Contains all video compression logic, FFmpeg integration, file handling, and UI event listeners. Runs in the renderer process with Node.js integration.
+</Accordion>
+
+<Accordion title="preload.js">
+  Runs before the renderer process loads. Currently displays version information for Chrome, Node.js, and Electron.
+</Accordion>
+
+<Accordion title="index.html">
+  The application's user interface. Contains file input, compression button, progress bar, and video display container.
+</Accordion>
+
+<Accordion title="styles.css">
+  Application styling with a dark theme. Defines the visual appearance of all UI components.
+</Accordion>
+
+## Dependencies
+
+The application relies on these key dependencies:
+
+- **electron** (v25.0.0): Desktop application framework
+- **fluent-ffmpeg** (v2.1.2): FFmpeg wrapper for Node.js
+- **ffmpeg-static** (v5.0.0): Bundled FFmpeg binary
+
+<Info>
+  All dependencies are specified in `package.json:8-14` and installed via npm.
+</Info>

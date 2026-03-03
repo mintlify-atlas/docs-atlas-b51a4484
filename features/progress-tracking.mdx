@@ -1,0 +1,191 @@
+---
+title: Progress tracking
+description: Monitor video compression progress in real-time with visual feedback
+---
+
+The progress tracking feature provides real-time visual feedback during video compression. You can see exactly how far along the compression process is through an animated progress bar.
+
+## Real-time progress updates
+
+FFmpeg emits progress events throughout the compression process, which the app uses to update the UI in real-time:
+
+```javascript renderer.js
+.on('progress', (progress) => {
+  const percent = Math.round(progress.percent);
+  progressBar.style.width = percent + '%';
+  console.log('Compression progress:', percent + '%');
+})
+```
+
+<Info>
+The `progress` object contains a `percent` property that indicates the current completion percentage of the compression operation.
+</Info>
+
+### How it works
+
+<Steps>
+  <Step title="FFmpeg emits progress event">
+    As FFmpeg processes the video, it periodically emits progress events with the current completion percentage.
+  </Step>
+  
+  <Step title="Calculate percentage">
+    The app rounds the percentage to the nearest whole number:
+    
+    ```javascript renderer.js
+    const percent = Math.round(progress.percent);
+    ```
+  </Step>
+  
+  <Step title="Update progress bar">
+    The progress bar's width is dynamically adjusted to reflect the completion percentage:
+    
+    ```javascript renderer.js
+    progressBar.style.width = percent + '%';
+    ```
+  </Step>
+  
+  <Step title="Log to console">
+    Progress updates are also logged to the console for debugging:
+    
+    ```javascript renderer.js
+    console.log('Compression progress:', percent + '%');
+    ```
+  </Step>
+</Steps>
+
+## Progress bar implementation
+
+The progress bar is implemented using HTML and CSS, with JavaScript controlling its width:
+
+### HTML structure
+
+```html index.html
+<div class="progress-container">
+    <div id="progressBar" class="progress-bar"></div>
+</div>
+```
+
+### JavaScript integration
+
+The progress bar element is referenced at the top of the renderer script:
+
+```javascript renderer.js
+const progressBar = document.getElementById('progressBar');
+```
+
+### Dynamic width updates
+
+During compression, the progress bar's width is updated to match the completion percentage:
+
+```javascript renderer.js
+progressBar.style.width = percent + '%';
+```
+
+<Tabs>
+  <Tab title="0% complete">
+    ```javascript
+    progressBar.style.width = '0%';
+    ```
+    Progress bar is not visible
+  </Tab>
+  
+  <Tab title="50% complete">
+    ```javascript
+    progressBar.style.width = '50%';
+    ```
+    Progress bar fills half the container
+  </Tab>
+  
+  <Tab title="100% complete">
+    ```javascript
+    progressBar.style.width = '100%';
+    ```
+    Progress bar fills the entire container
+  </Tab>
+</Tabs>
+
+## Progress events from FFmpeg
+
+FFmpeg's fluent API provides three key events for tracking compression status:
+
+<Accordion title="progress event">
+  Fired continuously during compression with percentage updates:
+  
+  ```javascript renderer.js
+  .on('progress', (progress) => {
+    const percent = Math.round(progress.percent);
+    progressBar.style.width = percent + '%';
+    console.log('Compression progress:', percent + '%');
+  })
+  ```
+  
+  This event allows you to provide real-time feedback to users about how long the compression will take.
+</Accordion>
+
+<Accordion title="end event">
+  Fired when compression completes successfully:
+  
+  ```javascript renderer.js
+  .on('end', () => {
+    output.innerText = 'Compression complete!';
+    progressBar.style.width = '0%';
+    console.log('Compression complete');
+    fs.unlinkSync(tempPath);
+  })
+  ```
+  
+  When compression finishes, the progress bar is reset to 0% and a completion message is displayed.
+</Accordion>
+
+<Accordion title="error event">
+  Fired when compression fails:
+  
+  ```javascript renderer.js
+  .on('error', (err) => {
+    output.innerText = `Error: ${err.message}`;
+    progressBar.style.width = '0%';
+    console.error('Compression error:', err);
+    fs.unlinkSync(tempPath);
+  })
+  ```
+  
+  If an error occurs, the progress bar is reset and an error message is shown to the user.
+</Accordion>
+
+## Progress bar reset
+
+The progress bar is automatically reset to 0% in two scenarios:
+
+1. **Compression completes successfully**
+   ```javascript renderer.js
+   .on('end', () => {
+     output.innerText = 'Compression complete!';
+     progressBar.style.width = '0%';
+   })
+   ```
+
+2. **Compression fails with an error**
+   ```javascript renderer.js
+   .on('error', (err) => {
+     output.innerText = `Error: ${err.message}`;
+     progressBar.style.width = '0%';
+   })
+   ```
+
+<Warning>
+The progress bar is reset immediately after compression completes, so it only displays progress during active compression operations.
+</Warning>
+
+## Console logging
+
+All progress updates are logged to the console for debugging and monitoring:
+
+```javascript renderer.js
+console.log('Compression progress:', percent + '%');
+```
+
+You can view these logs in Electron's DevTools to monitor compression progress and troubleshoot issues.
+
+<Note>
+The progress percentage is rounded to the nearest whole number before display, so you'll see values like 0%, 1%, 2%, etc., rather than decimal percentages.
+</Note>

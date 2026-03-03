@@ -1,0 +1,172 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for the Video Compressor application
+---
+
+This page covers common issues you may encounter while using the Video Compressor application and their solutions.
+
+## Missing videooutputs directory
+
+<Warning>
+The application requires a `videooutputs` directory to save compressed videos. This directory is **not created automatically**.
+</Warning>
+
+### Error symptoms
+
+- Compression fails with an error message
+- Application shows "Error: ENOENT: no such file or directory" in the output
+- Compressed videos are not saved
+
+### Solution
+
+Create the `videooutputs` directory in your project root before running the application:
+
+```bash
+mkdir videooutputs
+```
+
+<Note>
+The directory must be created in the same location where you cloned the repository. The application saves compressed videos to this directory as specified in `renderer.js:51`.
+</Note>
+
+## Video file selection issues
+
+### No file selected error
+
+If you click the "Compress" button without selecting a video file, you'll see the message:
+
+```
+Please select a video file.
+```
+
+### Solution
+
+1. Click the file input button in the application interface
+2. Select a valid video file from your system
+3. Click the "Compress" button
+
+<Tip>
+The application validates file selection in `renderer.js:16-20` before attempting compression.
+</Tip>
+
+## Compression errors
+
+Compression errors are caught and displayed in the application output area. These errors typically occur due to:
+
+### Invalid video format
+
+FFmpeg may not support certain video codecs or container formats.
+
+<Accordion title="Solution">
+Try converting your video to a widely supported format like MP4 before compression. Ensure the input file is not corrupted.
+</Accordion>
+
+### Insufficient disk space
+
+Compression requires temporary storage for processing.
+
+<Accordion title="Solution">
+Ensure you have sufficient disk space in both:
+- Your system's temporary directory (used for processing)
+- The `videooutputs` directory (for the final compressed file)
+</Accordion>
+
+### Error handling implementation
+
+The application implements error handling in `renderer.js:45-50`:
+
+```javascript
+.on('error', (err) => {
+  output.innerText = `Error: ${err.message}`;
+  progressBar.style.width = '0%';
+  console.error('Compression error:', err);
+  fs.unlinkSync(tempPath); // Clean up temporary file
+})
+```
+
+<Info>
+Error messages are displayed in the application's output area and logged to the console for debugging.
+</Info>
+
+## FFmpeg path issues
+
+### FFmpeg not found error
+
+If you see errors related to FFmpeg not being found, it may indicate an issue with the ffmpeg-static package.
+
+### Solution
+
+1. Reinstall the dependencies:
+
+```bash
+npm install
+```
+
+2. Verify the FFmpeg path is set correctly in `renderer.js:7`:
+
+```javascript
+ffmpeg.setFfmpegPath(ffmpegPath);
+```
+
+<Note>
+The ffmpeg-static package should automatically provide the correct binary path for your operating system.
+</Note>
+
+## Permission errors
+
+### Cannot write to videooutputs directory
+
+Permission errors may occur when the application tries to write compressed videos.
+
+### Solution
+
+Ensure the `videooutputs` directory has write permissions:
+
+**On Linux/macOS:**
+```bash
+chmod 755 videooutputs
+```
+
+**On Windows:**
+Right-click the `videooutputs` folder, select Properties > Security, and ensure your user account has write permissions.
+
+### Cannot read temporary files
+
+The application writes temporary files to your system's temp directory during compression.
+
+<Accordion title="Solution">
+Ensure your user account has read/write permissions for the system temporary directory:
+- **Linux/macOS**: `/tmp`
+- **Windows**: `%TEMP%` or `C:\Users\[YourUsername]\AppData\Local\Temp`
+</Accordion>
+
+## Video loading issues
+
+When viewing compressed videos in the application, you may encounter loading errors.
+
+### Videos not displaying
+
+This occurs when the application cannot read files from the `videooutputs` directory.
+
+### Solution
+
+Check the console for error messages (accessible via Developer Tools). The application logs video loading errors in `renderer.js:71-73`:
+
+```javascript
+videoElement.addEventListener('error', (e) => {
+  console.error('Error loading video:', videoPath, e);
+});
+```
+
+<Tip>
+Open Electron's Developer Tools by pressing `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (macOS) to view detailed error logs.
+</Tip>
+
+## Getting more help
+
+If you encounter issues not covered here:
+
+1. Check the console logs for detailed error messages
+2. Verify all dependencies are installed correctly
+3. Ensure you're using compatible Node.js and npm versions
+4. Review the [Dependencies](/reference/dependencies) page for version requirements

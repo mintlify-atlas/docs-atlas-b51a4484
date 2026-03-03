@@ -1,0 +1,242 @@
+---
+title: Viewing videos
+description: View and play compressed videos directly in the application
+---
+
+After compressing videos, you can view and play them directly within the application. The viewing feature reads compressed videos from the `videooutputs` directory and displays them with built-in playback controls.
+
+## View compressed videos tab
+
+The application includes a "View Compressed Videos" tab that loads and displays all compressed videos:
+
+```html index.html
+<ul>
+    <li><a href="#" id="view-videos-tab">View Compressed Videos</a></li>
+</ul>
+<div id="video-container"></div>
+```
+
+When you click this tab, the app scans the `videooutputs` directory and creates video players for each file.
+
+### Tab click handler
+
+```javascript renderer.js
+document.getElementById('view-videos-tab').addEventListener('click', async () => {
+  try {
+    const videoOutputsPath = path.join(__dirname, 'videooutputs');
+    console.log('Reading videos from:', videoOutputsPath);
+    const files = await fs.promises.readdir(videoOutputsPath);
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.innerHTML = '';
+    files.forEach(file => {
+      if (file.endsWith('.mp4')) {
+        const videoPath = path.join(videoOutputsPath, file);
+        console.log('Loading video:', videoPath);
+        const videoElement = document.createElement('video');
+        videoElement.src = videoPath;
+        videoElement.controls = true;
+        videoElement.addEventListener('error', (e) => {
+          console.error('Error loading video:', videoPath, e);
+        });
+        videoContainer.appendChild(videoElement);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading videos:', error);
+  }
+});
+```
+
+<Info>
+The tab uses async/await syntax to read the directory contents asynchronously, preventing the UI from freezing while loading videos.
+</Info>
+
+## Video playback functionality
+
+The viewing feature creates HTML5 video elements for each compressed video file:
+
+<Steps>
+  <Step title="Clear video container">
+    The video container is cleared before loading new videos:
+    
+    ```javascript renderer.js
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.innerHTML = '';
+    ```
+    
+    This ensures that clicking the tab multiple times doesn't create duplicate video players.
+  </Step>
+  
+  <Step title="Filter MP4 files">
+    The app only displays files with the `.mp4` extension:
+    
+    ```javascript renderer.js
+    files.forEach(file => {
+      if (file.endsWith('.mp4')) {
+        // Create video element
+      }
+    });
+    ```
+  </Step>
+  
+  <Step title="Create video elements">
+    For each MP4 file, a new video element is created with playback controls:
+    
+    ```javascript renderer.js
+    const videoElement = document.createElement('video');
+    videoElement.src = videoPath;
+    videoElement.controls = true;
+    ```
+  </Step>
+  
+  <Step title="Add error handling">
+    Each video element includes an error event listener for debugging:
+    
+    ```javascript renderer.js
+    videoElement.addEventListener('error', (e) => {
+      console.error('Error loading video:', videoPath, e);
+    });
+    ```
+  </Step>
+  
+  <Step title="Append to container">
+    The video element is added to the container:
+    
+    ```javascript renderer.js
+    videoContainer.appendChild(videoElement);
+    ```
+  </Step>
+</Steps>
+
+## Reading from videooutputs directory
+
+The app reads compressed videos from the `videooutputs` directory using Node.js file system operations:
+
+### Directory path resolution
+
+```javascript renderer.js
+const videoOutputsPath = path.join(__dirname, 'videooutputs');
+console.log('Reading videos from:', videoOutputsPath);
+```
+
+The path is resolved relative to the current directory using `__dirname`, ensuring it works regardless of where the app is installed.
+
+### Asynchronous directory reading
+
+```javascript renderer.js
+const files = await fs.promises.readdir(videoOutputsPath);
+```
+
+<Accordion title="Why use fs.promises.readdir?">
+  The `fs.promises.readdir` method returns a Promise that resolves with an array of filenames. This allows the code to use async/await syntax, making it more readable and easier to handle errors:
+  
+  ```javascript renderer.js
+  try {
+    const files = await fs.promises.readdir(videoOutputsPath);
+    // Process files
+  } catch (error) {
+    console.error('Error loading videos:', error);
+  }
+  ```
+</Accordion>
+
+### File filtering
+
+Only files ending with `.mp4` are processed:
+
+```javascript renderer.js
+files.forEach(file => {
+  if (file.endsWith('.mp4')) {
+    const videoPath = path.join(videoOutputsPath, file);
+    // Create video element
+  }
+});
+```
+
+<Tabs>
+  <Tab title="Valid files">
+    ```
+    compressed_video1.mp4 ✓
+    compressed_video2.mp4 ✓
+    my-compressed-video.mp4 ✓
+    ```
+  </Tab>
+  
+  <Tab title="Ignored files">
+    ```
+    video.avi ✗
+    readme.txt ✗
+    .DS_Store ✗
+    ```
+  </Tab>
+</Tabs>
+
+## Video element configuration
+
+Each video element is configured with the following properties:
+
+```javascript renderer.js
+const videoElement = document.createElement('video');
+videoElement.src = videoPath;
+videoElement.controls = true;
+```
+
+- **src**: Path to the video file in the `videooutputs` directory
+- **controls**: Enables native browser playback controls (play, pause, volume, fullscreen)
+
+<Note>
+The `controls` attribute adds a full set of playback controls to each video, including:
+- Play/pause button
+- Progress bar
+- Volume control
+- Fullscreen toggle
+- Timeline scrubbing
+</Note>
+
+## Error handling
+
+The viewing feature includes comprehensive error handling:
+
+### Video loading errors
+
+```javascript renderer.js
+videoElement.addEventListener('error', (e) => {
+  console.error('Error loading video:', videoPath, e);
+});
+```
+
+This catches errors that occur when a video file can't be loaded or played, such as:
+- Corrupted video files
+- Unsupported video codecs
+- Missing files
+
+### Directory reading errors
+
+```javascript renderer.js
+try {
+  const files = await fs.promises.readdir(videoOutputsPath);
+  // Process files
+} catch (error) {
+  console.error('Error loading videos:', error);
+}
+```
+
+This handles errors when the `videooutputs` directory doesn't exist or can't be read.
+
+<Warning>
+If the `videooutputs` directory doesn't exist, the viewing feature will log an error to the console. Make sure to create this directory before attempting to view videos.
+</Warning>
+
+## Console logging
+
+The viewing feature logs detailed information for debugging:
+
+```javascript renderer.js
+console.log('Reading videos from:', videoOutputsPath);
+```
+
+```javascript renderer.js
+console.log('Loading video:', videoPath);
+```
+
+You can view these logs in Electron's DevTools to troubleshoot video loading issues.

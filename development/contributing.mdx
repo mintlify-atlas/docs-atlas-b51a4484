@@ -1,0 +1,387 @@
+---
+title: Contributing guidelines
+description: Learn how to contribute to the Video Compressor project
+---
+
+## Development setup
+
+Get started with Video Compressor development by setting up your local environment.
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the project to your local machine:
+    ```bash
+    git clone <repository-url>
+    cd video-compressor
+    ```
+  </Step>
+  
+  <Step title="Install dependencies">
+    Install the required npm packages:
+    ```bash
+    npm install
+    ```
+    
+    This installs:
+    - `electron` (v25.0.0) - Development dependency
+    - `fluent-ffmpeg` (v2.1.2) - FFmpeg wrapper
+    - `ffmpeg-static` (v5.0.0) - Bundled FFmpeg binary
+  </Step>
+  
+  <Step title="Start the application">
+    Launch the Electron app in development mode:
+    ```bash
+    npm start
+    ```
+    
+    This runs the `electron .` command as defined in `package.json:6`.
+  </Step>
+</Steps>
+
+<Note>
+  The application uses Electron v25.0.0. Make sure you have Node.js 14.0.0 or higher installed.
+</Note>
+
+## Code structure
+
+Understanding the project structure will help you make effective contributions.
+
+### Main files
+
+<Accordion title="main.js (29 lines)">
+  **Purpose**: Electron main process entry point
+  
+  **Key responsibilities**:
+  - Create and manage the browser window (`main.js:4-16`)
+  - Handle application lifecycle events (`main.js:18-28`)
+  - Configure security settings and Node.js integration
+  
+  **When to modify**:
+  - Adding new windows or dialogs
+  - Changing window configuration
+  - Implementing IPC handlers
+  - Adding menu items or tray icons
+</Accordion>
+
+<Accordion title="renderer.js (81 lines)">
+  **Purpose**: Renderer process logic and video compression
+  
+  **Key responsibilities**:
+  - Initialize FFmpeg with bundled binary (`renderer.js:1-7`)
+  - Handle file selection and validation (`renderer.js:14-20`)
+  - Execute video compression with progress tracking (`renderer.js:32-51`)
+  - Display compressed videos (`renderer.js:57-80`)
+  
+  **When to modify**:
+  - Changing compression settings
+  - Adding new FFmpeg features
+  - Implementing additional UI interactions
+  - Modifying error handling or progress tracking
+</Accordion>
+
+<Accordion title="preload.js (11 lines)">
+  **Purpose**: Preload script for version information
+  
+  **Key responsibilities**:
+  - Display Chrome, Node.js, and Electron versions (`preload.js:7-9`)
+  - Run before the renderer process loads
+  
+  **When to modify**:
+  - Adding secure IPC communication
+  - Exposing safe APIs to the renderer
+  - Implementing context bridge for better security
+</Accordion>
+
+<Accordion title="index.html (24 lines)">
+  **Purpose**: Application user interface
+  
+  **Key components**:
+  - File input for video selection (`index.html:11`)
+  - Compress button to trigger compression (`index.html:12`)
+  - Progress bar for visual feedback (`index.html:15-17`)
+  - Video container for displaying compressed videos (`index.html:14`)
+  
+  **When to modify**:
+  - Adding new UI elements
+  - Restructuring the layout
+  - Adding new tabs or sections
+</Accordion>
+
+<Accordion title="styles.css (50 lines)">
+  **Purpose**: Application styling and theme
+  
+  **Key features**:
+  - Dark theme with Discord-inspired colors (`styles.css:3-4`)
+  - Centered flexbox layout (`styles.css:7-11`)
+  - Styled buttons with hover effects (`styles.css:22-34`)
+  - Animated progress bar (`styles.css:36-49`)
+  
+  **When to modify**:
+  - Changing the color scheme
+  - Updating component styles
+  - Adding responsive design
+</Accordion>
+
+### Key functions
+
+<Accordion title="createWindow() - main.js:4-16">
+  Creates the main application window with configured security settings.
+  
+  ```javascript
+  function createWindow() {
+    const win = new BrowserWindow({
+      width: 800,
+      height: 600,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: true,
+        contextIsolation: false
+      }
+    });
+    win.loadFile('index.html');
+  }
+  ```
+</Accordion>
+
+<Accordion title="Compression logic - renderer.js:14-55">
+  Handles the entire video compression workflow from file selection to output.
+  
+  **Flow**:
+  1. Validates file selection
+  2. Reads file as ArrayBuffer
+  3. Writes to temporary location
+  4. Processes with FFmpeg
+  5. Tracks progress and handles errors
+  6. Saves to output directory
+  7. Cleans up temporary files
+</Accordion>
+
+<Accordion title="Video viewer - renderer.js:57-80">
+  Loads and displays compressed videos from the output directory.
+  
+  **Features**:
+  - Reads all files from `videooutputs` directory
+  - Filters for MP4 files
+  - Creates video elements with controls
+  - Handles loading errors
+</Accordion>
+
+## Testing approach
+
+While the project doesn't currently have automated tests, you should manually test your changes.
+
+### Manual testing checklist
+
+<Steps>
+  <Step title="Test compression functionality">
+    - Select various video formats (MP4, AVI, MOV, etc.)
+    - Verify progress bar updates correctly
+    - Check that compressed videos play properly
+    - Ensure temporary files are cleaned up
+  </Step>
+  
+  <Step title="Test error handling">
+    - Try compressing invalid or corrupted files
+    - Test with very large files
+    - Verify error messages display correctly
+    - Confirm temporary cleanup happens on errors
+  </Step>
+  
+  <Step title="Test UI interactions">
+    - Click "View Compressed Videos" tab
+    - Verify video playback controls work
+    - Test window resizing behavior
+    - Check responsive layout at different sizes
+  </Step>
+  
+  <Step title="Test on multiple platforms">
+    - Windows: Verify window close behavior
+    - macOS: Test activate event (clicking dock icon)
+    - Linux: Check window manager compatibility
+  </Step>
+</Steps>
+
+<Tip>
+  Keep the Developer Tools open during testing (`View > Toggle Developer Tools`) to monitor console logs and catch JavaScript errors.
+</Tip>
+
+### Console logging
+
+The application includes extensive console logging for debugging:
+
+```javascript renderer.js:15,18,26,30,37,42,48
+console.log('Compress button clicked');
+console.log('No video file selected');
+console.log('File loaded into buffer');
+console.log('File saved to temporary path:', tempPath);
+console.log('Compression progress:', percent + '%');
+console.log('Compression complete');
+console.error('Compression error:', err);
+```
+
+<Info>
+  When adding new features, include similar console logging to aid debugging and testing.
+</Info>
+
+## How to submit contributions
+
+Follow these guidelines when contributing to the project.
+
+### Before you start
+
+<Steps>
+  <Step title="Check existing issues">
+    Review open issues to see if your contribution is already being discussed or worked on.
+  </Step>
+  
+  <Step title="Create an issue">
+    For new features or significant changes, create an issue to discuss your proposal before starting work.
+  </Step>
+  
+  <Step title="Fork the repository">
+    Fork the project to your own GitHub account to work on your changes.
+  </Step>
+</Steps>
+
+### Making changes
+
+<Steps>
+  <Step title="Create a feature branch">
+    Create a descriptive branch name:
+    ```bash
+    git checkout -b feature/add-video-filters
+    git checkout -b fix/progress-bar-accuracy
+    git checkout -b docs/update-readme
+    ```
+  </Step>
+  
+  <Step title="Write clean code">
+    - Follow the existing code style and formatting
+    - Add comments for complex logic
+    - Include console logging for debugging
+    - Keep functions focused and single-purpose
+  </Step>
+  
+  <Step title="Test thoroughly">
+    Use the manual testing checklist above to verify your changes work correctly.
+  </Step>
+</Steps>
+
+### Submitting your contribution
+
+<Steps>
+  <Step title="Commit your changes">
+    Write clear, descriptive commit messages:
+    ```bash
+    git add .
+    git commit -m "Add support for custom output directories"
+    git commit -m "Fix progress bar not resetting after errors"
+    git commit -m "Update documentation for FFmpeg options"
+    ```
+  </Step>
+  
+  <Step title="Push to your fork">
+    Push your branch to your GitHub fork:
+    ```bash
+    git push origin feature/add-video-filters
+    ```
+  </Step>
+  
+  <Step title="Create a pull request">
+    Open a pull request from your fork to the main repository.
+    
+    Include in your PR description:
+    - What problem does this solve?
+    - How does it work?
+    - What testing have you done?
+    - Screenshots (for UI changes)
+  </Step>
+</Steps>
+
+<Note>
+  Maintainers will review your pull request and may request changes or ask questions. Be responsive to feedback and willing to make adjustments.
+</Note>
+
+### Code review guidelines
+
+When your PR is under review:
+
+- Respond to comments and questions promptly
+- Make requested changes in new commits (don't force push)
+- Be open to suggestions and alternative approaches
+- Update your PR description if the scope changes
+
+## Common contribution areas
+
+Here are some areas where contributions are especially welcome:
+
+<Accordion title="FFmpeg features">
+  - Add support for more compression formats
+  - Implement video filters (brightness, contrast, etc.)
+  - Add audio compression options
+  - Support batch processing multiple files
+</Accordion>
+
+<Accordion title="User interface">
+  - Design a settings panel for compression options
+  - Add drag-and-drop file support
+  - Implement dark/light theme toggle
+  - Create a better video gallery view
+</Accordion>
+
+<Accordion title="Security improvements">
+  - Implement proper IPC communication
+  - Enable context isolation
+  - Remove direct Node.js integration
+  - Add input validation and sanitization
+</Accordion>
+
+<Accordion title="Performance optimizations">
+  - Optimize memory usage for large files
+  - Add chunked file reading
+  - Implement compression queue
+  - Cache compressed videos metadata
+</Accordion>
+
+<Accordion title="Documentation">
+  - Add code comments
+  - Create architecture diagrams
+  - Write API documentation
+  - Add troubleshooting guides
+</Accordion>
+
+## License
+
+This project is available under the MIT License.
+
+<Info>
+  By contributing to this project, you agree that your contributions will be licensed under the MIT License.
+</Info>
+
+### MIT License terms
+
+The MIT License is a permissive license that allows:
+
+- Commercial use
+- Modification
+- Distribution
+- Private use
+
+The only requirement is that the license and copyright notice must be included in all copies or substantial portions of the software.
+
+<Tip>
+  You can find the full license text in the `LICENSE` file in the project root.
+</Tip>
+
+## Getting help
+
+If you need assistance while contributing:
+
+- Check existing documentation and code comments
+- Review closed issues for similar problems
+- Open a new issue with your question
+- Reference specific files and line numbers when asking questions
+
+<Note>
+  Include relevant console logs, error messages, and steps to reproduce when reporting issues.
+</Note>
