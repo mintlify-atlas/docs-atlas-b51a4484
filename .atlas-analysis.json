@@ -1,0 +1,59 @@
+{
+  "projectType": "frontend",
+  "projectName": "Video Compressor",
+  "projectDescription": "A desktop application built with Electron for compressing video files using FFmpeg",
+  "theme": "aspen",
+  "primaryColor": "#7289da",
+  "lightColor": "#8a9de8",
+  "darkColor": "#5b6eae",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/video-compression",
+          "features/progress-tracking",
+          "features/viewing-videos"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/architecture",
+          "development/configuration",
+          "development/contributing"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/dependencies",
+          "reference/troubleshooting"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Video file compression with FFmpeg",
+    "Real-time compression progress tracking",
+    "View compressed videos directly in the app",
+    "Simple desktop interface built with Electron",
+    "Automatic output directory management"
+  ],
+  "publicApiSurface": [
+    "Video input file selector",
+    "Compress button (compression trigger)",
+    "Progress bar component",
+    "View compressed videos functionality",
+    "FFmpeg compression with 1000k bitrate",
+    "Output directory: videooutputs/"
+  ]
+}
